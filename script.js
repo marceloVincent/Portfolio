@@ -429,8 +429,8 @@
         status.textContent = "";
         return;
       }
-      status.textContent = `Thanks, ${name}! Your message was sent successfully.`;
-      alert(`Message sent! Thank you, ${name}.`);
+      status.textContent = `We realy appreciate Your Message, ${name}! This feature is still in maintenance, so please contact me in my email.`;
+      alert(`thank you, ${name}! This feature is still in maintenance, so please contact me in my email instead.`);
       form.reset();
     });
   };
