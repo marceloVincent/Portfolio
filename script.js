@@ -1,18 +1,21 @@
 (() => {
   "use strict";
 
-  const root = document.documentElement;
-  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const canHover = window.matchMedia && window.matchMedia("(hover: hover)").matches;
+  const rootElement = document.documentElement;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const supportsHover = window.matchMedia && window.matchMedia("(hover: hover)").matches;
 
-  const SMOOTH_SCROLL = false;
-  const PARALLAX = false;
-  const INTRO = 0;
+  const ENABLE_SMOOTH_SCROLL = false;
+  const ENABLE_PARALLAX = false;
+  const INTRO_DELAY_MS = 0;
 
   try {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) root.setAttribute("data-theme", savedTheme);
-  } catch (e) {}
+    if (savedTheme) {
+      rootElement.setAttribute("data-theme", savedTheme);
+    }
+  } catch (error) {
+  }
 
   document.addEventListener("DOMContentLoaded", () => {
     initTheme();
@@ -35,116 +38,148 @@
     initRipple();
   });
 
-  window.addEventListener("pageshow", (e) => {
-    const wipe = document.getElementById("pageWipe");
-    if (wipe && e.persisted) wipe.classList.remove("leaving");
+  window.addEventListener("pageshow", (event) => {
+    const pageWipeOverlay = document.getElementById("pageWipe");
+    if (pageWipeOverlay && event.persisted) {
+      pageWipeOverlay.classList.remove("leaving");
+    }
   });
 
   const initTheme = () => {
-    const btn = document.getElementById("themeToggle");
-    if (!btn) return;
-    const paint = () => {
-      const isLight = root.getAttribute("data-theme") === "light";
-      btn.innerHTML = isLight ? "&#9728;" : "&#9790;";
-      btn.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+    const themeToggleButton = document.getElementById("themeToggle");
+    if (!themeToggleButton) return;
+
+    const renderThemeUI = () => {
+      const isLightTheme = rootElement.getAttribute("data-theme") === "light";
+      themeToggleButton.innerHTML = isLightTheme ? "&#9728;" : "&#9790;";
+      themeToggleButton.setAttribute(
+        "aria-label",
+        isLightTheme ? "Switch to dark mode" : "Switch to light mode"
+      );
     };
-    paint();
-    btn.addEventListener("click", () => {
-      const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-      root.setAttribute("data-theme", next);
-      try { localStorage.setItem("theme", next); } catch (e) {}
-      paint();
+
+    renderThemeUI();
+
+    themeToggleButton.addEventListener("click", () => {
+      const nextTheme = rootElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      rootElement.setAttribute("data-theme", nextTheme);
+      try {
+        localStorage.setItem("theme", nextTheme);
+      } catch (error) { }
+      renderThemeUI();
     });
   };
 
   const initMobileMenu = () => {
-    const toggle = document.getElementById("navToggle");
-    const links = document.getElementById("navLinks");
-    if (!toggle || !links) return;
-    toggle.addEventListener("click", () => {
-      const open = links.classList.toggle("open");
-      toggle.setAttribute("aria-expanded", String(open));
+    const navToggleButton = document.getElementById("navToggle");
+    const navLinksContainer = document.getElementById("navLinks");
+    if (!navToggleButton || !navLinksContainer) return;
+
+    navToggleButton.addEventListener("click", () => {
+      const isOpen = navLinksContainer.classList.toggle("open");
+      navToggleButton.setAttribute("aria-expanded", String(isOpen));
     });
   };
 
   const initSplitText = () => {
-    if (reduceMotion) return;
-    document.querySelectorAll("[data-split]").forEach((el) => {
-      const label = el.textContent.trim();
-      let i = 0;
-      const walk = (node) => {
-        Array.from(node.childNodes).forEach((n) => {
-          if (n.nodeType === 3) {
-            const frag = document.createDocumentFragment();
-            n.textContent.split(/(\s+)/).forEach((part) => {
+    if (prefersReducedMotion) return;
+
+    document.querySelectorAll("[data-split]").forEach((element) => {
+      const originalLabel = element.textContent.trim();
+      let wordIndex = 0;
+
+      const walkNodes = (parentNode) => {
+        Array.from(parentNode.childNodes).forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const fragment = document.createDocumentFragment();
+
+            node.textContent.split(/(\s+)/).forEach((part) => {
               if (!part) return;
+
               if (/^\s+$/.test(part)) {
-                frag.appendChild(document.createTextNode(" "));
+                fragment.appendChild(document.createTextNode(" "));
                 return;
               }
-              const w = document.createElement("span");
-              w.className = "word";
-              w.setAttribute("aria-hidden", "true");
-              const inner = document.createElement("span");
-              inner.className = "word-in";
-              inner.style.animationDelay = `${INTRO / 1000 + 0.1 + i * 0.08}s`;
-              inner.textContent = part;
-              w.appendChild(inner);
-              frag.appendChild(w);
-              i++;
+
+              const wordWrapper = document.createElement("span");
+              wordWrapper.className = "word";
+              wordWrapper.setAttribute("aria-hidden", "true");
+
+              const wordInner = document.createElement("span");
+              wordInner.className = "word-in";
+              wordInner.style.animationDelay = `${INTRO_DELAY_MS / 1000 + 0.1 + wordIndex * 0.08}s`;
+              wordInner.textContent = part;
+
+              wordWrapper.appendChild(wordInner);
+              fragment.appendChild(wordWrapper);
+              wordIndex++;
             });
-            n.parentNode.replaceChild(frag, n);
-          } else if (n.nodeType === 1) {
-            walk(n);
+
+            node.parentNode.replaceChild(fragment, node);
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            walkNodes(node);
           }
         });
       };
-      walk(el);
-      el.setAttribute("aria-label", label);
+
+      walkNodes(element);
+      element.setAttribute("aria-label", originalLabel);
     });
   };
 
   const initTypewriter = () => {
-    const el = document.getElementById("typedText");
-    if (!el) return;
-    const words = ["BSIT Student", "Front-End Developer", "Future Full-Stack developer"];
-    let w = 0, c = 0;
-    let deleting = false;
+    const typedTextElement = document.getElementById("typedText");
+    if (!typedTextElement) return;
+
+    const phrases = ["BSIT Student", "Front-End Developer", "Future Full-Stack developer"];
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
     const tick = () => {
-      const word = words[w];
-      if (!deleting) {
-        c++;
-        el.textContent = word.slice(0, c);
-        if (c === word.length) {
-          deleting = true;
+      const currentPhrase = phrases[phraseIndex];
+
+      if (!isDeleting) {
+        charIndex++;
+        typedTextElement.textContent = currentPhrase.slice(0, charIndex);
+
+        if (charIndex === currentPhrase.length) {
+          isDeleting = true;
           return setTimeout(tick, 1400);
         }
         return setTimeout(tick, 90);
       }
-      c--;
-      el.textContent = word.slice(0, c);
-      if (c === 0) {
-        deleting = false;
-        w = (w + 1) % words.length;
+
+      charIndex--;
+      typedTextElement.textContent = currentPhrase.slice(0, charIndex);
+
+      if (charIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
         return setTimeout(tick, 400);
       }
+
       setTimeout(tick, 45);
     };
-    setTimeout(tick, INTRO + 150);
+
+    setTimeout(tick, INTRO_DELAY_MS + 150);
   };
 
   const initWelcome = () => {
-    const box = document.getElementById("welcomeMsg");
-    if (!box) return;
-    const h = new Date().getHours();
-    const greet = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-    box.textContent = `${greet}!\nWelcome  to My portfolio.`;
-    setTimeout(() => { box.classList.add("show"); }, 1200);
-    setTimeout(() => { box.classList.remove("show"); }, 6000);
+    const welcomeBox = document.getElementById("welcomeMsg");
+    if (!welcomeBox) return;
+
+    const currentHour = new Date().getHours();
+    const greeting = currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
+
+    welcomeBox.textContent = `${greeting}!\nWelcome  to My portfolio.`;
+
+    setTimeout(() => { welcomeBox.classList.add("show"); }, 1200);
+    setTimeout(() => { welcomeBox.classList.remove("show"); }, 6000);
   };
 
-  const navigate = (href) => {
-    window.location.href = href;
+  const navigateTo = (url) => {
+    window.location.href = url;
   };
 
   const initPageTransitions = () => {
@@ -152,286 +187,380 @@
   };
 
   const initAlertButtons = () => {
-    document.querySelectorAll(".js-alert").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        alert(btn.getAttribute("data-alert") || "Hello!");
-        navigate(btn.getAttribute("href"));
+    document.querySelectorAll(".js-alert").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        alert(button.getAttribute("data-alert") || "Hello!");
+        navigateTo(button.getAttribute("href"));
       });
     });
   };
 
   const initScrollEffects = () => {
-    const topBtn = document.getElementById("backToTop");
-    const bar = document.getElementById("scrollProgress");
-    const header = document.getElementById("siteHeader");
-    const hero = document.getElementById("heroRight");
-    let ticking = false;
+    const backToTopBtn = document.getElementById("backToTop");
+    const progressBar = document.getElementById("scrollProgress");
+    const siteHeader = document.getElementById("siteHeader");
+    const heroRightSection = document.getElementById("heroRight");
+    let isTicking = false;
 
-    const update = () => {
-      const y = window.scrollY || window.pageYOffset;
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (bar) bar.style.width = `${max > 0 ? (y / max) * 100 : 0}%`;
-      if (topBtn) topBtn.classList.toggle("show", y > 300);
-      if (header) header.classList.toggle("scrolled", y > 10);
-      if (PARALLAX && hero && !reduceMotion && y < window.innerHeight) {
-        hero.style.setProperty("--py", `${y * 0.25}px`);
+    const updateScrollValues = () => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+      if (progressBar) {
+        progressBar.style.width = `${maxScroll > 0 ? (scrollY / maxScroll) * 100 : 0}%`;
       }
-      ticking = false;
+      if (backToTopBtn) {
+        backToTopBtn.classList.toggle("show", scrollY > 300);
+      }
+      if (siteHeader) {
+        siteHeader.classList.toggle("scrolled", scrollY > 10);
+      }
+      if (ENABLE_PARALLAX && heroRightSection && !prefersReducedMotion && scrollY < window.innerHeight) {
+        heroRightSection.style.setProperty("--py", `${scrollY * 0.25}px`);
+      }
+
+      isTicking = false;
     };
 
     window.addEventListener("scroll", () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(update);
+      if (!isTicking) {
+        isTicking = true;
+        requestAnimationFrame(updateScrollValues);
       }
     }, { passive: true });
 
-    window.addEventListener("resize", update);
-    update();
+    window.addEventListener("resize", updateScrollValues);
+    updateScrollValues();
 
-    if (topBtn) {
-      topBtn.addEventListener("click", () => {
+    if (backToTopBtn) {
+      backToTopBtn.addEventListener("click", () => {
         window.scrollTo({
           top: 0,
-          behavior: (SMOOTH_SCROLL && !reduceMotion) ? "smooth" : "auto"
+          behavior: (ENABLE_SMOOTH_SCROLL && !prefersReducedMotion) ? "smooth" : "auto"
         });
       });
     }
   };
 
   const initClock = () => {
-    const el = document.getElementById("liveClock");
-    if (!el) return;
-    const update = () => {
+    const clockElement = document.getElementById("liveClock");
+    if (!clockElement) return;
+
+    const updateClock = () => {
       const now = new Date();
-      const date = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-      const time = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      el.textContent = `${date} | ${time}`;
+      const dateString = now.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+      const timeString = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+
+      clockElement.textContent = `${dateString} | ${timeString}`;
     };
-    update();
-    setInterval(update, 1000);
+
+    updateClock();
+    setInterval(updateClock, 1000);
   };
 
   const initReadMore = () => {
-    document.querySelectorAll(".toggle-btn").forEach((btn) => {
-      const target = document.getElementById(btn.getAttribute("data-target"));
-      if (!target) return;
-      const hasArrow = !!btn.querySelector(".arrow");
-      btn.addEventListener("click", () => {
-        const open = target.hidden;
-        target.hidden = !open;
-        btn.setAttribute("aria-expanded", String(open));
-        const text = open ? "Show less" : "Read more";
-        btn.innerHTML = hasArrow ? `${text} <span class="arrow">&rarr;</span>` : text;
+    document.querySelectorAll(".toggle-btn").forEach((button) => {
+      const targetElement = document.getElementById(button.getAttribute("data-target"));
+      if (!targetElement) return;
+
+      const hasArrowIcon = !!button.querySelector(".arrow");
+
+      button.addEventListener("click", () => {
+        const isCurrentlyHidden = targetElement.hidden;
+        targetElement.hidden = !isCurrentlyHidden;
+
+        button.setAttribute("aria-expanded", String(isCurrentlyHidden));
+
+        const labelText = isCurrentlyHidden ? "Show less" : "Read more";
+        button.innerHTML = hasArrowIcon ? `${labelText} <span class="arrow">&rarr;</span>` : labelText;
       });
     });
   };
 
   const initReveal = () => {
     document.querySelectorAll("[data-stagger]").forEach((group) => {
-      const anim = group.getAttribute("data-anim");
-      Array.from(group.children).forEach((child, i) => {
+      const animationType = group.getAttribute("data-anim");
+
+      Array.from(group.children).forEach((child, index) => {
         child.classList.add("reveal");
-        if (anim) child.setAttribute("data-anim", anim);
-        child.style.setProperty("--d", `${i * 0.12}s`);
+        if (animationType) {
+          child.setAttribute("data-anim", animationType);
+        }
+        child.style.setProperty("--d", `${index * 0.12}s`);
       });
     });
 
-    const els = document.querySelectorAll(".reveal");
-    if (!("IntersectionObserver" in window) || reduceMotion) {
-      els.forEach((el) => { el.classList.add("in"); });
+    const revealElements = document.querySelectorAll(".reveal");
+
+    if (!("IntersectionObserver" in window) || prefersReducedMotion) {
+      revealElements.forEach((element) => { element.classList.add("in"); });
       return;
     }
 
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (!en.isIntersecting) return;
-        const el = en.target;
-        const delay = parseFloat(el.style.getPropertyValue("--d")) || 0;
-        el.classList.add("in");
-        io.unobserve(el);
-        setTimeout(() => { el.classList.remove("reveal", "in"); }, (delay + 1.1) * 1000);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const target = entry.target;
+        const delayInSeconds = parseFloat(target.style.getPropertyValue("--d")) || 0;
+
+        target.classList.add("in");
+        observer.unobserve(target);
+
+        setTimeout(() => {
+          target.classList.remove("reveal", "in");
+        }, (delayInSeconds + 1.1) * 1000);
       });
     }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
 
-    setTimeout(() => { els.forEach((el) => { io.observe(el); }); }, INTRO);
+    setTimeout(() => {
+      revealElements.forEach((element) => { observer.observe(element); });
+    }, INTRO_DELAY_MS);
   };
 
   const initCounters = () => {
-    const box = document.getElementById("stats");
-    const nums = document.querySelectorAll(".stat-num");
-    if (!box || !nums.length) return;
+    const statsContainer = document.getElementById("stats");
+    const statNumbers = document.querySelectorAll(".stat-num");
+    if (!statsContainer || !statNumbers.length) return;
 
-    const run = () => {
-      nums.forEach((el) => {
-        const target = parseInt(el.getAttribute("data-target"), 10) || 0;
-        let n = 0;
-        const step = Math.max(1, Math.ceil(target / 40));
-        const timer = setInterval(() => {
-          n = Math.min(target, n + step);
-          el.textContent = n;
-          if (n >= target) clearInterval(timer);
+    const startCounters = () => {
+      statNumbers.forEach((element) => {
+        const targetValue = parseInt(element.getAttribute("data-target"), 10) || 0;
+        let currentValue = 0;
+        const stepValue = Math.max(1, Math.ceil(targetValue / 40));
+
+        const counterTimer = setInterval(() => {
+          currentValue = Math.min(targetValue, currentValue + stepValue);
+          element.textContent = currentValue;
+
+          if (currentValue >= targetValue) {
+            clearInterval(counterTimer);
+          }
         }, 40);
       });
     };
 
     if (!("IntersectionObserver" in window)) {
-      run();
+      startCounters();
       return;
     }
 
-    const io = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        io.disconnect();
-        setTimeout(run, 1000 + INTRO);
+        observer.disconnect();
+        setTimeout(startCounters, 1000 + INTRO_DELAY_MS);
       }
     }, { threshold: 0.4 });
-    io.observe(box);
+
+    observer.observe(statsContainer);
   };
 
   const initSkillBars = () => {
-    const bars = document.querySelectorAll(".bar-fill");
-    if (!bars.length) return;
-    const fill = (b) => { b.style.width = `${b.getAttribute("data-level")}%`; };
+    const skillBars = document.querySelectorAll(".bar-fill");
+    if (!skillBars.length) return;
+
+    const fillBar = (barElement) => {
+      barElement.style.width = `${barElement.getAttribute("data-level")}%`;
+    };
+
     if (!("IntersectionObserver" in window)) {
-      bars.forEach(fill);
+      skillBars.forEach(fillBar);
       return;
     }
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) {
-          fill(en.target);
-          io.unobserve(en.target);
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          fillBar(entry.target);
+          observer.unobserve(entry.target);
         }
       });
     }, { threshold: 0.4 });
-    bars.forEach((b) => { io.observe(b); });
+
+    skillBars.forEach((bar) => { observer.observe(bar); });
   };
 
   const initImages = () => {
-    const svg = (kind, w, h) => {
-      let inner;
+    const createPlaceholderSvg = (kind, width, height) => {
+      let svgInnerHtml;
+
       if (kind === "portrait") {
-        inner = `<circle cx="${w / 2}" cy="${h * 0.34}" r="${w * 0.2}" fill="#0A0A0A"/>` +
-                `<path d="M${w * 0.08} ${h} Q${w * 0.1} ${h * 0.62} ${w / 2} ${h * 0.6} Q${w * 0.9} ${h * 0.62} ${w * 0.92} ${h} Z" fill="#0A0A0A"/>`;
+        svgInnerHtml =
+          `<circle cx="${width / 2}" cy="${height * 0.34}" r="${width * 0.2}" fill="#0A0A0A"/>` +
+          `<path d="M${width * 0.08} ${height} Q${width * 0.1} ${height * 0.62} ${width / 2} ${height * 0.6} Q${width * 0.9} ${height * 0.62} ${width * 0.92} ${height} Z" fill="#0A0A0A"/>`;
       } else {
-        inner = `<rect width="${w}" height="${h}" fill="#1b1b1b"/>` +
-                `<rect x="${w * 0.08}" y="${h * 0.15}" width="${w * 0.84}" height="${h * 0.12}" rx="8" fill="#80FF00"/>` +
-                `<rect x="${w * 0.08}" y="${h * 0.38}" width="${w * 0.5}" height="${h * 0.38}" rx="8" fill="#333"/>` +
-                `<rect x="${w * 0.62}" y="${h * 0.38}" width="${w * 0.3}" height="${h * 0.38}" rx="8" fill="#2a2a2a"/>`;
+        svgInnerHtml =
+          `<rect width="${width}" height="${height}" fill="#1b1b1b"/>` +
+          `<rect x="${width * 0.08}" y="${height * 0.15}" width="${width * 0.84}" height="${height * 0.12}" rx="8" fill="#80FF00"/>` +
+          `<rect x="${width * 0.08}" y="${height * 0.38}" width="${width * 0.5}" height="${height * 0.38}" rx="8" fill="#333"/>` +
+          `<rect x="${width * 0.62}" y="${height * 0.38}" width="${width * 0.3}" height="${height * 0.38}" rx="8" fill="#2a2a2a"/>`;
       }
-      const s = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${inner}</svg>`;
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`;
+
+      const fullSvgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${svgInnerHtml}</svg>`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(fullSvgString)}`;
     };
 
-    document.querySelectorAll("img").forEach((img) => {
-      const shown = () => { img.classList.add("loaded"); };
-      const swap = () => {
-        img.onerror = null;
-        const kind = img.getAttribute("data-placeholder") || "project";
-        const w = parseInt(img.getAttribute("width"), 10) || 480;
-        const h = parseInt(img.getAttribute("height"), 10) || 300;
-        img.src = svg(kind, w, h);
+    document.querySelectorAll("img").forEach((imageElement) => {
+      const handleImageLoaded = () => {
+        imageElement.classList.add("loaded");
       };
-      img.addEventListener("load", shown);
-      if (img.hasAttribute("data-placeholder")) {
-        img.onerror = swap;
-        if (img.complete && img.naturalWidth === 0 && img.getAttribute("loading") !== "lazy") swap();
+
+      const handleImageError = () => {
+        imageElement.onerror = null;
+        const placeholderType = imageElement.getAttribute("data-placeholder") || "project";
+        const width = parseInt(imageElement.getAttribute("width"), 10) || 480;
+        const height = parseInt(imageElement.getAttribute("height"), 10) || 300;
+
+        imageElement.src = createPlaceholderSvg(placeholderType, width, height);
+      };
+
+      imageElement.addEventListener("load", handleImageLoaded);
+
+      if (imageElement.hasAttribute("data-placeholder")) {
+        imageElement.onerror = handleImageError;
+        if (
+          imageElement.complete &&
+          imageElement.naturalWidth === 0 &&
+          imageElement.getAttribute("loading") !== "lazy"
+        ) {
+          handleImageError();
+        }
       }
-      if (img.complete && img.naturalWidth > 0) shown();
+
+      if (imageElement.complete && imageElement.naturalWidth > 0) {
+        handleImageLoaded();
+      }
     });
   };
 
   const initCardEffects = () => {
-    if (reduceMotion || !canHover) return;
-    document.querySelectorAll(".card").forEach((card) => {
-      const tilt = card.classList.contains("project");
-      card.addEventListener("mousemove", (e) => {
-        const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
-        card.style.setProperty("--mx", `${px * 100}%`);
-        card.style.setProperty("--my", `${py * 100}%`);
-        if (tilt) {
-          card.style.transform = `perspective(800px) rotateY(${(px - 0.5) * 8}deg) rotateX(${-(py - 0.5) * 8}deg) translateY(-8px)`;
+    if (prefersReducedMotion || !supportsHover) return;
+
+    document.querySelectorAll(".card").forEach((cardElement) => {
+      const isProjectCard = cardElement.classList.contains("project");
+
+      cardElement.addEventListener("mousemove", (event) => {
+        const bounds = cardElement.getBoundingClientRect();
+        const percentX = (event.clientX - bounds.left) / bounds.width;
+        const percentY = (event.clientY - bounds.top) / bounds.height;
+
+        cardElement.style.setProperty("--mx", `${percentX * 100}%`);
+        cardElement.style.setProperty("--my", `${percentY * 100}%`);
+
+        if (isProjectCard) {
+          const rotateY = (percentX - 0.5) * 8;
+          const rotateX = -(percentY - 0.5) * 8;
+          cardElement.style.transform = `perspective(800px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) translateY(-8px)`;
         }
       });
-      card.addEventListener("mouseleave", () => {
-        if (tilt) card.style.transform = "";
+
+      cardElement.addEventListener("mouseleave", () => {
+        if (isProjectCard) {
+          cardElement.style.transform = "";
+        }
       });
     });
   };
 
   const initMagnetic = () => {
-    if (reduceMotion || !canHover) return;
-    document.querySelectorAll(".btn").forEach((btn) => {
-      btn.addEventListener("mousemove", (e) => {
-        const r = btn.getBoundingClientRect();
-        const x = (e.clientX - (r.left + r.width / 2)) / r.width;
-        const y = (e.clientY - (r.top + r.height / 2)) / r.height;
-        btn.style.setProperty("--tx", `${x * 10}px`);
-        btn.style.setProperty("--ty", `${y * 8}px`);
+    if (prefersReducedMotion || !supportsHover) return;
+
+    document.querySelectorAll(".btn").forEach((buttonElement) => {
+      buttonElement.addEventListener("mousemove", (event) => {
+        const bounds = buttonElement.getBoundingClientRect();
+        const offsetX = (event.clientX - (bounds.left + bounds.width / 2)) / bounds.width;
+        const offsetY = (event.clientY - (bounds.top + bounds.height / 2)) / bounds.height;
+
+        buttonElement.style.setProperty("--tx", `${offsetX * 10}px`);
+        buttonElement.style.setProperty("--ty", `${offsetY * 8}px`);
       });
-      btn.addEventListener("mouseleave", () => {
-        btn.style.setProperty("--tx", "0px");
-        btn.style.setProperty("--ty", "0px");
+
+      buttonElement.addEventListener("mouseleave", () => {
+        buttonElement.style.setProperty("--tx", "0px");
+        buttonElement.style.setProperty("--ty", "0px");
       });
     });
   };
 
   const initRipple = () => {
-    if (reduceMotion) return;
-    document.querySelectorAll(".btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const r = btn.getBoundingClientRect();
-        const size = Math.max(r.width, r.height);
-        const dot = document.createElement("span");
-        dot.className = "ripple";
-        dot.style.width = dot.style.height = `${size}px`;
-        dot.style.left = `${e.clientX - r.left - size / 2}px`;
-        dot.style.top = `${e.clientY - r.top - size / 2}px`;
-        btn.appendChild(dot);
-        setTimeout(() => { dot.remove(); }, 650);
+    if (prefersReducedMotion) return;
+
+    document.querySelectorAll(".btn").forEach((buttonElement) => {
+      buttonElement.addEventListener("click", (event) => {
+        const bounds = buttonElement.getBoundingClientRect();
+        const rippleSize = Math.max(bounds.width, bounds.height);
+
+        const rippleElement = document.createElement("span");
+        rippleElement.className = "ripple";
+        rippleElement.style.width = rippleElement.style.height = `${rippleSize}px`;
+
+        rippleElement.style.left = `${event.clientX - bounds.left - rippleSize / 2}px`;
+        rippleElement.style.top = `${event.clientY - bounds.top - rippleSize / 2}px`;
+
+        buttonElement.appendChild(rippleElement);
+        setTimeout(() => { rippleElement.remove(); }, 650);
       });
     });
   };
 
   const initContactForm = () => {
-    const form = document.getElementById("contactForm");
-    if (!form) return;
-    const status = document.getElementById("formStatus");
+    const contactForm = document.getElementById("contactForm");
+    if (!contactForm) return;
 
-    const setError = (id, msg) => {
-      const input = document.getElementById(id);
-      const out = form.querySelector(`.error[data-for="${id}"]`);
-      const field = input.parentElement;
-      field.classList.remove("invalid");
-      if (msg) {
-        void field.offsetWidth;
-        field.classList.add("invalid");
+    const statusMessageElement = document.getElementById("formStatus");
+
+    const setFieldError = (fieldId, errorMessage) => {
+      const inputElement = document.getElementById(fieldId);
+      const errorOutputElement = contactForm.querySelector(`.error[data-for="${fieldId}"]`);
+      const fieldContainer = inputElement.parentElement;
+
+      fieldContainer.classList.remove("invalid");
+
+      if (errorMessage) {
+        void fieldContainer.offsetWidth;
+        fieldContainer.classList.add("invalid");
       }
-      if (out) out.textContent = msg;
-      return !msg;
+
+      if (errorOutputElement) {
+        errorOutputElement.textContent = errorMessage;
+      }
+
+      return !errorMessage;
     };
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const message = document.getElementById("message").value.trim();
-      let ok = true;
-      ok = setError("name", name.length < 2 ? "Please enter your name." : "") && ok;
-      ok = setError("email", /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "" : "Please enter a valid email.") && ok;
-      ok = setError("message", message.length < 10 ? "Message should be at least 10 characters." : "") && ok;
+    contactForm.addEventListener("submit", (event) => {
+      event.preventDefault();
 
-      if (!ok) {
-        status.textContent = "";
+      const nameValue = document.getElementById("name").value.trim();
+      const emailValue = document.getElementById("email").value.trim();
+      const messageValue = document.getElementById("message").value.trim();
+
+      let isValid = true;
+      const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+
+      isValid = setFieldError("name", nameValue.length < 2 ? "Please enter your name." : "") && isValid;
+      isValid = setFieldError("email", isEmailValid ? "" : "Please enter a valid email.") && isValid;
+      isValid = setFieldError("message", messageValue.length < 10 ? "Message should be at least 10 characters." : "") && isValid;
+
+      if (!isValid) {
+        statusMessageElement.textContent = "";
         return;
       }
-      status.textContent = `We realy appreciate Your Message, ${name}! This feature is still in maintenance, so please contact me in my email.`;
-      alert(`thank you, ${name}! This feature is still in maintenance, so please contact me in my email instead.`);
-      form.reset();
+
+      statusMessageElement.textContent = `We really appreciate Your Message, ${nameValue}! This feature is still in maintenance, so please contact me via my email.`;
+      alert(`Thank you, ${nameValue}! This feature is still in maintenance, so please contact me via my email instead.`);
+
+      contactForm.reset();
     });
   };
 })();
