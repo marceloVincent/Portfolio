@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Activities and projects by Vincent Michael C. Marcelo, from prelim to final.">
+  <title>Vincent. | Projects</title>
+  <script>document.documentElement.className += " js";</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+  <div class="page-wipe" id="pageWipe" aria-hidden="true"></div>
+
+  <header class="site-header" id="siteHeader">
+    <nav class="nav container" aria-label="Main navigation">
+      <a href="index.html" class="logo">Vincent<span>.</span></a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="skills.html">Skills</a></li>
+        <li><a href="projects.html" class="active">Projects</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">&#9790;</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="page-hero" data-bg="WORK">
+      <div class="container">
+        <p class="eyebrow">Prelim to Final</p>
+        <h1 data-split>My <span class="hl">Projects</span></h1>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <p class="lead reveal">Each card links to an activity I created during the course.</p>
+
+        <div class="project-grid" data-stagger>
+          <article class="card project">
+            <img src="\Users\Guestt\Downloads\portfolio\pictures\prelim act1.png.png" alt="Thumbnail of Prelim Activity 1" width="480" height="300" data-placeholder="project" loading="lazy" decoding="async" class="lazy-img">
+            <div class="project-body">
+              <span class="tag">Prelim</span>
+              <h3>Prelim Activity 1</h3>
+              <p>Introductory HTML page with headings links/import audio and picture.</p>
+              <a href="https://marcelovincent.github.io/ITE-ACTIVITY/" class="project-link">View project <span class="arrow">&rarr;</span></a>
+            </div>
+          </article>
+
+          <article class="card project">
+            <img src="\Users\Guestt\Downloads\portfolio\pictures\midterm act1.png.png" alt="Thumbnail of Prelim Activity 2" width="480" height="300" data-placeholder="project" loading="lazy" decoding="async" class="lazy-img">
+            <div class="project-body">
+              <span class="tag">Midterm</span>
+              <h3>Midterm Activity 1</h3>
+              <p>Simple Website Using Minimize Property.</p>
+              <a href="https://marcelovincent.github.io/ITE-SIMPLE-WEBSITE/" class="project-link">View project <span class="arrow">&rarr;</span></a>
+            </div>
+          </article>
+
+          <article class="card project">
+            <img src="\Users\Guestt\Downloads\portfolio\pictures\midterm act 2.png.png" alt="Thumbnail of Midterm Activity 1" width="480" height="300" data-placeholder="project" loading="lazy" decoding="async" class="lazy-img">
+            <div class="project-body">
+              <span class="tag">Midterm</span>
+              <h3>Midterm Activity 2</h3>
+              <p>Display And Position Property.</p>
+              <a href="https://marcelovincent.github.io/display-and-property-ITE-ACTIVITY-/" class="project-link">View project <span class="arrow">&rarr;</span></a>
+            </div>
+          </article>
+
+          <article class="card project">
+            <img src="\Users\Guestt\Downloads\portfolio\pictures\final act.png.png" alt="Thumbnail of Midterm Activity 2" width="480" height="300" data-placeholder="project" loading="lazy" decoding="async" class="lazy-img">
+            <div class="project-body">
+              <span class="tag">Finals</span>
+              <h3>Finals Activity</h3>
+              <p>Letter For Our Teachers activity.</p>
+              <a href="https://marcelovincent.github.io/ITE-TEACHERSDAY-ACTIVITY/" class="project-link">View project <span class="arrow">&rarr;</span></a>
+            </div>
+          </article>
+
+          
+          <article class="card project">
+            <img src="\Users\Guestt\Downloads\portfolio\pictures\final project.png.png" alt="Thumbnail of Final Portfolio Website" width="480" height="300" data-placeholder="project" loading="lazy" decoding="async" class="lazy-img">
+            <div class="project-body">
+              <span class="tag">Final Project</span>
+              <h3>Portfolio Website</h3>
+              <p>This multi-page portfolio you are viewing right now.</p>
+              <a href="index.html" class="project-link">View project <span class="arrow">&rarr;</span></a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta-band" aria-label="Call to action">
+      <div class="container cta-inner">
+        <h2 class="reveal" data-anim="left">Want to see more?</h2>
+        <a href="contact.html" class="btn btn-dark js-alert reveal" data-anim="right" data-alert="Let's talk! Opening the contact page.">Let's Talk <span class="arrow">&rarr;</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 Vincent Michael C. Marcelo. All Rights Reserved.</p>
+      <p class="clock" id="liveClock" aria-label="Current date and time"></p>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">&uarr;</button>
+  <script src="script.js"></script>
+</body>
+</html>

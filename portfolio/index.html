@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio of Vincent Michael C. Marcelo, BSIT21010 student.">
+  <title>Vincent. | Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a href="index.html" class="logo">Vincent<span>.</span></a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="skills.html">Skills</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">&#9790;</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="welcome-toast" id="welcomeMsg" role="status" aria-live="polite"></div>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-left">
+        <div class="hero-content">
+          <p class="badge"><span id="typedText"></span><span class="caret" aria-hidden="true">|</span></p>
+          <h1 id="heroTitle">Hi, I'm <span class="hl">Vincent</span> Michael</h1>
+          <p class="hero-sub">Section <strong>BSIT21010</strong>. I design and build clean, responsive websites and I'm learning something new every day.</p>
+          <div class="hero-actions">
+            <a href="contact.html" class="btn btn-primary js-alert" data-alert="Thanks for reaching out! Taking you to the contact page.">Get in touch <span class="arrow">&rarr;</span></a>
+            <a href="projects.html" class="btn btn-outline">View projects <span class="arrow">&rarr;</span></a>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="stat-num" data-target="5">5</span><span class="stat-plus">+</span><p>Projects built</p></div>
+            <div class="stat"><span class="stat-num" data-target="5">5</span><span class="stat-plus">+</span><p>Tech Stack</p></div>
+            <div class="stat"><span class="stat-num" data-target="3">2nd</span><p>College Year</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <img src="\Users\Guestt\Downloads\portfolio\pictures\hero-pic.png" alt="Portrait of Vincent Michael C. Marcelo" class="hero-img" width="550" height="700" data-placeholder="portrait">
+      </div>
+    </section>
+
+    <section class="section cta-band">
+      <div class="container cta-inner">
+        <h2>Have a project or idea in mind?</h2>
+        <a href="contact.html" class="btn btn-dark js-alert" data-alert="Let's talk! Opening the contact page.">Let's Talk <span class="arrow">&rarr;</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 Vincent Michael C. Marcelo. All Rights Reserved.</p>
+      <p class="clock" id="liveClock" aria-label="Current date and time"></p>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">&uarr;</button>
+  <script src="script.js"></script>
+</body>
+</html>
